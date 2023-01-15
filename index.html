@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-compatible" content="IE=edge">
+    <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input type="text" id="message" />
+    <button onclick="envoyerMessage()">Eonvoyer</button><br/>
+    <div  id="messages"></div>
+
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <script>
+        const socket = io('http://localhost:3333');
+        const message = document.getElementById('message');
+       const messages = document.getElementById('messages');
+        socket.on('connect', ()=> console.log('Connected'));
+        socket.on('message', function(id, data) {
+            messages.innerHTML += `<p> ${id} : ${data} </p>`;
+        });
+
+        function envoyerMessage(){
+            socket.emit('message', message.value);
+        }
+    </script>
+</body>
+</html>

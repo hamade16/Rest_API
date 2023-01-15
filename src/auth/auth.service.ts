@@ -14,12 +14,16 @@ export class AuthService {
         try
         {
             // generate the password
-             const hash = await  argon.hash(dto.password);
+             //const hash = await  argon.hash(dto.password);
              //save the new user in the db 
              const user = await this.prisma.user.create({
                  data: {
                      email: dto.email,
-                     hash,
+                     nickname: dto.nickname,
+                     username: dto.username,
+                     firstName:dto.firstName,
+                     lastName: dto.lastName,
+                     picturelink: dto.pictureLink,
                  },
 
                  // select: {
@@ -56,10 +60,10 @@ export class AuthService {
         if (!user)
             throw new ForbiddenException('Credentials incorrect');
         //compare password
-        const pwMatches = await argon.verify((await user).hash, dto.password);
+        //const pwMatches = await argon.verify(dto.password);
         //if password incorrect throw exception
-        if (!pwMatches)
-            throw new ForbiddenException('Credentials incorrect');
+        // if (!pwMatches)
+        //     throw new ForbiddenException('Credentials incorrect');
 
         //send back user
         return this.signToken(user.id, user.email);
@@ -77,7 +81,7 @@ export class AuthService {
 
         return
         { 
-            acces_token: token
+            token
         }
     }
 }
