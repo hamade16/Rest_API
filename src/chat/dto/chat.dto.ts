@@ -5,5 +5,7 @@ export class ChatDto {
     @IsNotEmpty()
     @IsString()
     name: string
+    @IsNumber()
+    owner: Number
 
 }

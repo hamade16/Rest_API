@@ -38,32 +38,20 @@ export class RoomController
      @Post('/addtoroom')
      async  addtoroom(@Body() user)
      {
-        const userUpdate = await this.prisma.room.update({
-            where: {
-              name: user.name,
-            },
-            data: {
-              members: {
-                push: +user.id,
-              },
-            },
-          })
+      await this.roomservice.addtoroom(user);
      }
 
      @Post('/addtoadmins')
-     async  addtoaddmins(@Body() user)
+     async  adduseradmins(@Body() user)
      {
-        const userUpdate = await this.prisma.room.update({
-            where: {
-              name: user.name,
-            },
-            data: {
-              admins: {
-                push: +user.id,
-              },
-            },
-          })
+        await this.roomservice.adduseradmins(user);
      }
+
+     @Patch('/ban')
+     async  banmember(@Body() user)
+    {
+        await this.roomservice.banmember(user);
+    }
 
 
 }
