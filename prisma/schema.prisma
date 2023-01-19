@@ -37,8 +37,32 @@ model Room {
   name String @unique
   owner Int
   members Int[]
-
+  blocked Int[]
+  type String @default("private")
   admins Int[]
+  mute Muted[]
+  message Messages[]
+
+  hash String?
   
   @@map("room")
+}
+
+model Muted {
+  id Int @id @default(autoincrement())
+  roomId  Int
+  userId  Int
+  room Room @relation(fields: [roomId], references: [id])
+  time String
+
+  @@map("muted")
+}
+
+model Messages {
+  id Int @id @default(autoincrement())
+  room Room @relation(fields: [roomId], references: [id])
+  roomId Int
+  dat String
+  
+  @@map("messages")
 }

@@ -2,6 +2,8 @@ import { ForbiddenException, Injectable} from "@nestjs/common";
 import { async } from "rxjs";
 import { PrismaService } from "src/prisma/prisma.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
+import { comparepassword, hashPassword} from "./utils/bcrypt";
+import moment from "moment";
 
 
 @Injectable()
@@ -16,23 +18,55 @@ export class RoomService {
                 id: element.id,
                 admins: element.admins,
                 members: element.members,
-                name: element.name
+                name: element.name,
+                type: element.type,
+                owner: element.owner
                 
             }
-            allRooms.push(obj);
+            if (obj.type === "public" || obj.type === "protected")
+              allRooms.push(obj);
         });
         return allRooms;
     }
 
-    async CreateRoom(userId: number, name: string) {
-        const id1 = await this.prisma.room.create({
-        data: {
-                name: name,
-                admins: +userId,
-                members: +userId,
-                owner: +userId
-            }
-        })
+    async CreateRoom(userId: number, name: string, type: string) {
+      const rooms = await this.prisma.room.findUnique({
+        where: {
+            name: name
+        }
+    });
+    if (rooms)
+      throw new ForbiddenException('name existe'); 
+    const id1 = await this.prisma.room.create({
+          data: {
+                  name: name,
+                  admins: +userId,
+                  members: +userId,
+                  owner: +userId,
+                  type: type
+              }
+          })
+    }
+
+    async CreateRoomprotected(userId: number, name: string, type: string, password: string){
+      const rooms = await this.prisma.room.findUnique({
+        where: {
+            name: name
+        }
+    });
+    if (rooms)
+      throw new ForbiddenException('name existe');
+    const rawPassword = await hashPassword(password);
+    const id1 = await this.prisma.room.create({
+      data: {
+              name: name,
+              admins: +userId,
+              members: +userId,
+              owner: +userId,
+              type: type,
+              hash: rawPassword
+          }
+      })
     }
 
     async addtoroom(user: any) {
@@ -41,6 +75,9 @@ export class RoomService {
                 name: user.name
             }
         });
+        const id_ban = rooms.blocked.find((id) => id==user.id)
+        if (id_ban)
+          throw new ForbiddenException('user banned');
        const id1 =  rooms.members.find((id) => id==user.id)
        if (id1)
         throw new ForbiddenException('already members');
@@ -55,6 +92,34 @@ export class RoomService {
             },
         })
     }
+
+    async addtoroomprotected(user: any) {
+      const rooms = await this.prisma.room.findUnique({
+          where: {
+              name: user.name
+          }
+      });
+      const matched = comparepassword(user.password, rooms.hash);
+      if (!matched)
+        throw new ForbiddenException('password incorrect');
+      const id_ban = rooms.blocked.find((id) => id==user.id)
+      if (id_ban)
+        throw new ForbiddenException('user banned');
+     const id1 =  rooms.members.find((id) => id==user.id)
+     if (id1)
+      throw new ForbiddenException('already members');
+      const userUpdate = await this.prisma.room.update({
+          where: {
+            name: user.name,
+          },
+          data: {
+            members: {
+              push: +user.id,
+            },
+          },
+      })
+  }
+
 
     async   adduseradmins(user: any)
     {
@@ -124,5 +189,25 @@ export class RoomService {
                 }
             })
           }
+          const addtoblock = await this.prisma.room.update({
+            where: {
+              name: user.name,
+            },
+            data: {
+              blocked: {
+                push: +user.user_id,
+              },
+            },
+          })
+        }
+
+        async muteduser(user) {
+          await this.prisma.muted.create({
+            data: {
+              roomId: user.roomId,
+              userId: user.id,
+              time: moment().add(user.value).toString()
+            }
+          })
         }
 }

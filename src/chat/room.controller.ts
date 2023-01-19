@@ -32,13 +32,19 @@ export class RoomController
 
     @Post('createroom')
     async CreateRoom(@Body() user) {
-        await this.roomservice.CreateRoom(user.id, user.name);
+        if (user.type === "public" || user.type === "private")
+            await this.roomservice.CreateRoom(user.id, user.name, user.type);
+        else
+            await this.roomservice.CreateRoomprotected(user.id, user.name, user.type, user.password);
      }
 
      @Post('/addtoroom')
      async  addtoroom(@Body() user)
      {
-      await this.roomservice.addtoroom(user);
+        if (user.type === "public")
+            await this.roomservice.addtoroom(user);
+        else
+            await this.roomservice.addtoroomprotected(user);
      }
 
      @Post('/addtoadmins')
