@@ -62,7 +62,7 @@ model Messages {
   id Int @id @default(autoincrement())
   room Room @relation(fields: [roomId], references: [id])
   roomId Int
-  dat String
+  data String
   
   @@map("messages")
 }

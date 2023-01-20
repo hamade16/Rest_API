@@ -5,6 +5,7 @@ import { Socket } from 'socket.io'
 import { Server } from "http";
 import { PrismaService } from "src/prisma/prisma.service";
 import { RoomService } from "./room.service";
+import { Body } from "@nestjs/common";
 
 @WebSocketGateway({
     cors: {
@@ -15,7 +16,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
     server: Server;
 
-    constructor(private authservice: AuthService, private prisma: PrismaService, private roomservice: RoomService) {}
+    constructor(private prisma: PrismaService, private roomservice: RoomService) {}
 
     handleConnection() {
         
@@ -26,11 +27,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         console.log('disconnect');
     }
     @SubscribeMessage('message')
-    async handlemessage(@MessageBody() data, socket: Socket)
+    async handlemessage(@MessageBody() Body, socket: Socket)
     {
-        await socket.to(data.roomId).emit('message', data.message);
+        console.log(Body.roomId);
+        //await socket.to(Body.roomId).emit('message', Body.message);
         await this.prisma.messages.create({
-            
+            data: {
+                roomId: +Body.roomId,
+                data: Body.data
+            }
         })
     }
     // private disconnect (client: Socket)
